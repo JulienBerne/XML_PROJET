@@ -20,7 +20,7 @@
     <div class="panel">
       <div class="panel__head">
         <h2>Nouveau film</h2>
-        <p class="muted">Formulaire identique à la version HTML/JS (admin.js).</p>
+        <p class="muted"></p>
       </div>
 
       <form class="form" @submit.prevent="publish">
@@ -93,7 +93,7 @@
           </div>
 
           <div class="field">
-            <label class="label">Jours (3 jours / semaine attendu côté back)</label>
+            <label class="label">Jours (3 jours / semaine)</label>
             <div class="chips">
               <label class="chip"><input type="checkbox" value="MON" v-model="form.days" />Lun</label>
               <label class="chip"><input type="checkbox" value="TUE" v-model="form.days" />Mar</label>
