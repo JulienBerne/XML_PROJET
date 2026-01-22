@@ -9,7 +9,20 @@
 
     <template v-else>
       <div v-if="movie" class="movie">
-        <div class="movie__poster"></div>
+        <!-- ✅ Affiche du film -->
+        <div class="movie__poster">
+          <img
+            v-if="poster"
+            :src="poster"
+            :alt="movie.title"
+            class="movie__posterImg"
+            loading="lazy"
+          />
+          <div v-else class="movie__posterFallback">
+            {{ movie.title }}
+          </div>
+        </div>
+
         <div class="panel">
           <h1 style="margin: 0 0 6px">{{ movie.title }}</h1>
           <div class="muted" style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -41,10 +54,17 @@
         </div>
 
         <div v-else>
-          <div v-for="(list, place) in groupedSessions" :key="place" class="panel" style="margin:10px 0;">
+          <div
+            v-for="(list, place) in groupedSessions"
+            :key="place"
+            class="panel"
+            style="margin:10px 0;"
+          >
             <div style="font-weight:800;margin-bottom:8px;">{{ place }}</div>
             <div class="sessions">
-              <span v-for="(s, idx) in list" :key="idx" class="time">{{ s.day }} {{ s.startTime }}</span>
+              <span v-for="(s, idx) in list" :key="idx" class="time">
+                {{ s.day }} {{ s.startTime }}
+              </span>
             </div>
           </div>
         </div>
@@ -63,6 +83,9 @@ const id = computed(() => route.params.id);
 
 const movie = ref(null);
 const error = ref("");
+
+// ✅ Affiche (supporte posterUrl ou poster_url)
+const poster = computed(() => movie.value?.posterUrl || movie.value?.poster_url || "");
 
 const actorsLabel = computed(() => (movie.value?.mainActors || []).join(", ") || "—");
 const sessionsCount = computed(() => (movie.value?.sessions || []).length);
@@ -96,3 +119,30 @@ async function load() {
 
 onMounted(load);
 </script>
+
+<style scoped>
+.movie__poster {
+  height: 340px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.movie__posterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.movie__posterFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+  font-weight: 800;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.65));
+}
+</style>

@@ -29,7 +29,7 @@ export async function listMoviesByCity(req, res, next) {
       FROM movies m
       JOIN screenings s ON s.movie_id = m.id
       JOIN cinemas c ON c.id = s.cinema_id
-      WHERE c.city = ?
+      WHERE LOWER(TRIM(c.city)) = LOWER(TRIM(?))
       ORDER BY m.id, s.start_at
       `,
       [city]
