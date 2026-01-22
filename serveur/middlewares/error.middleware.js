@@ -1,4 +1,5 @@
-export function errorMiddleware(err, req, res, next) {
-  console.error("❌ ERROR:", err);
-  res.status(500).json({ error: "Erreur serveur" });
+export function errorHandler(err, req, res, next) {
+  console.error(err);
+  const status = err?.statusCode || 500;
+  res.status(status).json({ message: err?.message || "Erreur serveur" });
 }

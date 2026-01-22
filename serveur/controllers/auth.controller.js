@@ -1,43 +1,73 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { db } from "../db/pool.js";
 
-export async function register(req, res) {
-  const { email, password, firstName, lastName } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: "email/password required" });
-
-  const [exists] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
-  if (exists.length) return res.status(409).json({ error: "Email already used" });
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const [r] = await db.query(
-    "INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES (?, ?, ?, ?, 'USER')",
-    [email, passwordHash, firstName || null, lastName || null]
-  );
-
-  res.status(201).json({ id: r.insertId, email });
+function jwtSecret() {
+  return process.env.JWT_SECRET || "dev_secret_change_me";
 }
 
-export async function login(req, res) {
-  const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: "email/password required" });
+function signToken(user) {
+  const payload = { sub: user.id, role: user.role, email: user.email };
+  return jwt.sign(payload, jwtSecret(), { expiresIn: "7d" });
+}
 
-  const [[user]] = await db.query(
-    "SELECT id, email, password_hash, role FROM users WHERE email = ?",
-    [email]
-  );
+export async function register(req, res, next) {
+  try {
+    const { email, password, firstname, lastname } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email et mot de passe requis" });
+    }
 
-  if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    const [existing] = await db.query("SELECT id FROM users WHERE email = ? LIMIT 1", [email]);
+    if (existing.length) {
+      return res.status(409).json({ message: "Email déjà utilisé" });
+    }
 
-  const ok = await bcrypt.compare(password, user.password_hash);
-  if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+    const password_hash = await bcrypt.hash(password, 10);
 
-  const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "8h" }
-  );
+    const [result] = await db.query(
+      "INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES (?, ?, ?, ?, 'USER')",
+      [email, password_hash, firstname || null, lastname || null]
+    );
 
-  res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    const user = { id: result.insertId, email, role: "USER" };
+    // on renvoie un token directement (pratique)
+    const token = signToken(user);
+
+    return res.status(201).json({ token, user: { id: user.id, email, role: user.role, firstname, lastname } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function login(req, res, next) {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email et mot de passe requis" });
+    }
+
+    const [rows] = await db.query(
+      "SELECT id, email, password_hash, role, first_name, last_name FROM users WHERE email = ? LIMIT 1",
+      [email]
+    );
+
+    if (!rows.length) {
+      return res.status(401).json({ message: "Identifiants invalides" });
+    }
+
+    const user = rows[0];
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) {
+      return res.status(401).json({ message: "Identifiants invalides" });
+    }
+
+    const token = signToken(user);
+    return res.json({
+      token,
+      user: { id: user.id, email: user.email, role: user.role, firstname: user.first_name, lastname: user.last_name },
+    });
+  } catch (err) {
+    next(err);
+  }
 }

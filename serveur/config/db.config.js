@@ -4,8 +4,8 @@ import mysql from "mysql2/promise";
 export const db = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "22012004T",
-  database: "cinema_db",
+  password: "Juju1212",
+  database: "xml_projet",
   waitForConnections: true,
   connectionLimit: 10
 });

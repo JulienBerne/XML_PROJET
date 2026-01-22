@@ -70,3 +70,28 @@ CREATE INDEX idx_cinemas_city ON cinemas(city);
 CREATE INDEX idx_screenings_movie ON screenings(movie_id);
 CREATE INDEX idx_screenings_cinema ON screenings(cinema_id);
 CREATE INDEX idx_screenings_date ON screenings(start_at);
+
+
+-- =========================
+-- DEMANDES : USER -> ADMIN (propriétaire)
+-- =========================
+CREATE TABLE IF NOT EXISTS admin_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  status ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+  message TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  decided_at TIMESTAMP NULL,
+  decided_by INT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (decided_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+
+-- =========================
+-- MOVIES : auteur de création (pour limiter la suppression aux films créés par le propriétaire)
+-- =========================
+ALTER TABLE movies ADD COLUMN created_by INT NULL;
+ALTER TABLE movies
+  ADD CONSTRAINT fk_movies_created_by
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
