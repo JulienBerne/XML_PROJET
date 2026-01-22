@@ -11,22 +11,22 @@ app.use(express.json());
 // Vue (Vite) tourne souvent sur 5173
 app.use(cors({ origin: "http://localhost:5173" }));
 
-// ✅ Test API
+//  Test API
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
-// ✅ Test DB
+//  Test DB
 app.get("/api/test-db", async (req, res) => {
   await db.query("SELECT 1");
   res.json({ db: "connected", schema: process.env.DB_NAME });
 });
 
-// ✅ Exemple: liste des cinémas (pour tester vite)
+//   liste des cinémas 
 app.get("/api/cinemas", async (req, res) => {
   const [rows] = await db.query("SELECT id, name, city, address FROM cinemas ORDER BY city, name");
   res.json(rows);
 });
 
-// ✅ Exemple: films par ville (si tu as déjà des données)
+//   films par ville 
 app.get("/api/cities/:city/movies", async (req, res) => {
   const city = req.params.city;
 
@@ -52,5 +52,5 @@ app.get("/api/cities/:city/movies", async (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ API: http://localhost:${PORT}`);
+  console.log(` API: http://localhost:${PORT}`);
 });
